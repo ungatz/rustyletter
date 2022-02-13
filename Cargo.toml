@@ -1,0 +1,12 @@
+[package]
+name = "rustyletter"
+version = "0.1.0"
+authors=["Sanad Kadu <rhizomorphic@tutanota.com>"]
+edition = "2021"
+
+[lib]
+path-="src/lib.rs"
+
+[dependencies]
+actix-web = "4.0.0-beta.16"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

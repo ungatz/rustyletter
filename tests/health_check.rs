@@ -1,5 +1,54 @@
 //! src/tests has all the integration tests where we try to imitate how a user might interact with out backend.
 use std::net::TcpListener;
+use actix_web::{HttpMessage, ResponseError};
+
+#[tokio::test]
+async fn subscriber_returns_200_for_valid_form_data(){
+    // Arrange
+    let addr = spawn_app();
+    let client = reqwest::Client::new();
+
+    //Act
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com"; // This is x-www-form-url-encoded
+    let response = client
+        .post(&format!("{}/subscriptions", &addr))
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(body)
+        .send()
+        .await
+        .expect("Failed to execute POST request.");
+
+    // Assert
+    assert_eq!(200, response.status().as_u16());
+}
+
+#[tokio::test]
+async fn subscriber_returns_400_when_data_is_missing(){
+    // Arrange
+    let addr = spawn_app();
+    let client = reqwest::Client::new();
+
+    //Act
+    let test_cases = vec![
+        ("name=le%20guin", "missing the email"),
+        ("email=ursula_le_guin%40gmail.com", "missing the name"),
+        ("", "missing both name and email")
+    ];
+    for(invalid_body, error_message) in test_cases {
+    let response = client
+        .post(&format!("{}/subscriptions", &addr))
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(invalid_body)
+        .send()
+        .await
+        .expect("Failed to execute POST request.");
+
+        // Assert
+        assert_eq!(400, response.status().as_u16(),
+                   "This API did not fail with 404 error when payload was {}",
+                   error_message);
+    }
+}
 
 #[tokio::test]
 async fn health_check_works() {
